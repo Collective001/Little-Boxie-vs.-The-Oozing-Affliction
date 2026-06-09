@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Little Boxie vs. The Oozing Affliction</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #1a1210;
+      --paper: #f2d58b;
+      --cream: #ffe8a8;
+      --red: #b53a2d;
+      --blue: #1f6c83;
+      --yellow: #f2c43d;
+      --green: #8ba12c;
+      --dark: #15110e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(242, 196, 61, 0.22), transparent 24rem),
+        radial-gradient(circle at 90% 12%, rgba(181, 58, 45, 0.18), transparent 22rem),
+        linear-gradient(145deg, #241c16 0%, #0f1415 58%, #1a110e 100%);
+      color: var(--cream);
+      font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+      letter-spacing: 0;
+    }
+
+    main {
+      width: min(1100px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--yellow);
+      text-transform: uppercase;
+      text-shadow: 3px 3px 0 #000;
+      font-size: clamp(1.35rem, 5.6vw, 3rem);
+      line-height: 0.95;
+    }
+
+    .badge {
+      min-width: 92px;
+      border: 3px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-family: Arial, sans-serif;
+      font-weight: 900;
+      text-align: center;
+      box-shadow: 4px 4px 0 #000;
+      transform: rotate(1deg);
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .hud-card {
+      border: 3px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 4px;
+      padding: 8px;
+      box-shadow: 4px 4px 0 #000;
+      font-family: Arial, sans-serif;
+      font-weight: 900;
+      min-height: 54px;
+    }
+
+    .hud-card strong {
+      display: block;
+      color: var(--red);
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .game-wrap {
+      position: relative;
+      min-height: 420px;
+      border: 5px solid var(--ink);
+      border-radius: 6px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at center, rgba(255, 232, 168, 0.18), transparent 24rem),
+        linear-gradient(135deg, rgba(31,108,131,0.92), rgba(159,69,38,0.9));
+      box-shadow: 7px 7px 0 #000;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: rgba(10, 8, 7, 0.58);
+      z-index: 2;
+    }
+
+    .panel {
+      max-width: 720px;
+      border: 5px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: 4px;
+      padding: 18px;
+      box-shadow: 8px 8px 0 #000;
+      font-family: Arial, sans-serif;
+      font-weight: 900;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      color: var(--red);
+      font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+      text-transform: uppercase;
+      font-size: clamp(1.8rem, 7vw, 3.5rem);
+      line-height: 0.95;
+    }
+
+    .panel p {
+      margin: 8px 0;
+      font-size: 1rem;
+      line-height: 1.35;
+    }
+
+    .controls {
+      display: grid;
+      gap: 8px;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 48px;
+      border: 3px solid var(--ink);
+      background: var(--yellow);
+      color: var(--ink);
+      border-radius: 4px;
+      padding: 10px 12px;
+      font: 900 1rem Arial, sans-serif;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 #000;
+    }
+
+    button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+
+    .secondary { background: var(--cream); }
+    .danger { background: #d64a39; color: #fff4d1; }
+
+    footer {
+      color: var(--cream);
+      font: 700 0.82rem Arial, sans-serif;
+      text-align: center;
+      opacity: 0.86;
+    }
+
+    @media (max-width: 650px) {
+      main { padding: 8px; }
+      .hud { grid-template-columns: repeat(2, 1fr); }
+      .button-row { grid-template-columns: 1fr; }
+      .game-wrap, canvas { min-height: 440px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Little Boxie vs.<br>The Oozing Affliction</h1>
+      </div>
+      <div class="badge">Approved<br>by Priests<br>Code</div>
+    </header>
+
+    <section class="hud">
+      <div class="hud-card">Score<strong id="score">0</strong></div>
+      <div class="hud-card">Wave<strong id="wave">1</strong></div>
+      <div class="hud-card">Impurity<strong id="impurity">0%</strong></div>
+      <div class="hud-card">Purify<strong id="purify">0%</strong></div>
+    </section>
+
+    <section class="game-wrap" id="gameWrap">
+      <canvas id="game" width="960" height="540" aria-label="Little Boxie cleaning game"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="panel">
+          <h2>Welcome to Leviticusland!</h2>
+          <p>Little Boxie, the cleanest hero in all the land, must repel flying ooze before impurity spreads.</p>
+          <p>Tap or click ooze blobs to cleanse them. Build purification power. Use the big blast when the Affliction gets pushy.</p>
+          <div class="button-row">
+            <button id="startBtn">Begin Cleansing</button>
+            <button class="secondary" id="howBtn">How to Play</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <div class="button-row">
+        <button id="blastBtn">Covenant Cleanse</button>
+        <button class="secondary" id="pauseBtn">Pause</button>
+      </div>
+    </section>
+
+    <footer>Clean family fun. Ceremonial sand not included.</footer>
+  </main>
+
+  <script>
+    const canvas = document.querySelector("#game");
+    const ctx = canvas.getContext("2d");
+    const overlay = document.querySelector("#overlay");
+    const scoreEl = document.querySelector("#score");
+    const waveEl = document.querySelector("#wave");
+    const impurityEl = document.querySelector("#impurity");
+    const purifyEl = document.querySelector("#purify");
+    const blastBtn = document.querySelector("#blastBtn");
+    const pauseBtn = document.querySelector("#pauseBtn");
+
+    const sheet = new Image();
+    sheet.src = "assets/boxie-sprite-sheet.png";
+
+    const sprites = {
+      boxieIdle: [0, 0, 512, 341],
+      boxieClean: [512, 0, 512, 341],
+      boxieHit: [1024, 0, 512, 341],
+      oozeSmall: [0, 341, 512, 341],
+      oozeMedium: [512, 341, 512, 341],
+      oozeFast: [1024, 341, 512, 341],
+      oozeBoss: [0, 682, 512, 342],
+      purifyBurst: [512, 682, 512, 342],
+      cleanSplash: [1024, 682, 512, 342]
+    };
+
+    const state = {
+      mode: "title",
+      score: 0,
+      wave: 1,
+      impurity: 0,
+      purify: 0,
+      combo: 0,
+      spawned: 0,
+      cleaned: 0,
+      totalThisWave: 8,
+      lastSpawn: 0,
+      spawnDelay: 1350,
+      oozes: [],
+      effects: [],
+      texts: [],
+      shake: 0,
+      boxieMood: "idle",
+      boxieMoodUntil: 0,
+      bossSpawned: false,
+      paused: false,
+      lastTime: 0
+    };
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const scale = window.devicePixelRatio || 1;
+      canvas.width = Math.max(640, Math.floor(rect.width * scale));
+      canvas.height = Math.max(420, Math.floor(rect.height * scale));
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+
+    function viewSize() {
+      const rect = canvas.getBoundingClientRect();
+      return { w: rect.width, h: rect.height };
+    }
+
+    function boxiePos() {
+      const { w, h } = viewSize();
+      return { x: w * 0.5, y: h * 0.72, r: Math.min(w, h) * 0.12 };
+    }
+
+    function resetGame() {
+      Object.assign(state, {
+        mode: "playing",
+        score: 0,
+        wave: 1,
+        impurity: 0,
+        purify: 0,
+        combo: 0,
+        spawned: 0,
+        cleaned: 0,
+        totalThisWave: 8,
+        lastSpawn: 0,
+        spawnDelay: 1350,
+        oozes: [],
+        effects: [],
+        texts: [],
+        shake: 0,
+        boxieMood: "idle",
+        boxieMoodUntil: 0,
+        bossSpawned: false,
+        paused: false,
+        lastTime: performance.now()
+      });
+      overlay.style.display = "none";
+      updateHud();
+    }
+
+    function updateHud() {
+      scoreEl.textContent = state.score;
+      waveEl.textContent = state.wave;
+      impurityEl.textContent = `${Math.round(state.impurity)}%`;
+      purifyEl.textContent = `${Math.round(state.purify)}%`;
+      blastBtn.disabled = state.purify < 100 || state.mode !== "playing";
+      pauseBtn.textContent = state.paused ? "Resume" : "Pause";
+    }
+
+    function spawnOoze() {
+      const { w, h } = viewSize();
+      const side = Math.floor(Math.random() * 4);
+      let x, y;
+      if (side === 0) { x = -40; y = Math.random() * h * 0.78; }
+      if (side === 1) { x = w + 40; y = Math.random() * h * 0.78; }
+      if (side === 2) { x = Math.random() * w; y = -40; }
+      if (side === 3) { x = Math.random() * w; y = h + 40; }
+
+      const roll = Math.random();
+      let type = "small";
+      if (state.wave >= 2 && roll > 0.58) type = "medium";
+      if (state.wave >= 3 && roll > 0.78) type = "fast";
+      const boss = state.wave === 4 && !state.bossSpawned;
+      if (boss) {
+        type = "boss";
+        state.bossSpawned = true;
+      }
+
+      const config = {
+        small: { hp: 1, speed: 24 + state.wave * 5, radius: 34, sprite: "oozeSmall", points: 100 },
+        medium: { hp: 2, speed: 22 + state.wave * 4, radius: 46, sprite: "oozeMedium", points: 180 },
+        fast: { hp: 1, speed: 54 + state.wave * 7, radius: 32, sprite: "oozeFast", points: 220 },
+        boss: { hp: 8, speed: 15, radius: 92, sprite: "oozeBoss", points: 1600 }
+      }[type];
+
+      state.oozes.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+        type,
+        x,
+        y,
+        hp: config.hp,
+        maxHp: config.hp,
+        speed: config.speed,
+        radius: config.radius,
+        sprite: config.sprite,
+        points: config.points,
+        wobble: Math.random() * Math.PI * 2
+      });
+      state.spawned += 1;
+    }
+
+    function cleanseOoze(ooze, x, y) {
+      ooze.hp -= 1;
+      state.boxieMood = "clean";
+      state.boxieMoodUntil = performance.now() + 180;
+      addEffect("purifyBurst", x, y, ooze.radius * 2.1);
+      if (ooze.hp <= 0) {
+        state.oozes = state.oozes.filter(item => item.id !== ooze.id);
+        state.cleaned += 1;
+        state.combo += 1;
+        const comboBonus = Math.min(300, state.combo * 15);
+        state.score += ooze.points + comboBonus;
+        state.purify = Math.min(100, state.purify + (ooze.type === "boss" ? 35 : 16));
+        comicText(randomCleanText(), x, y, "good");
+        addEffect("cleanSplash", x, y, ooze.radius * 2.4);
+        if (ooze.type === "boss") winGame();
+      } else {
+        state.score += 25;
+        comicText("SCRUB!", x, y, "good");
+      }
+      updateHud();
+    }
+
+    function randomCleanText() {
+      const lines = ["PURIFIED!", "CLEANSED!", "NOT TODAY, AFFLICTION!", "APPROVED!", "CEREMONIALLY SOUND!"];
+      return lines[Math.floor(Math.random() * lines.length)];
+    }
+
+    function addEffect(sprite, x, y, size) {
+      state.effects.push({ sprite, x, y, size, life: 320, maxLife: 320 });
+    }
+
+    function comicText(text, x, y, tone) {
+      state.texts.push({ text, x, y, tone, life: 720, maxLife: 720, vy: -34 });
+    }
+
+    function oozeHitBoxie(ooze) {
+      state.oozes = state.oozes.filter(item => item.id !== ooze.id);
+      state.combo = 0;
+      state.impurity += ooze.type === "boss" ? 22 : ooze.type === "medium" ? 8 : 6;
+      state.boxieMood = "hit";
+      state.boxieMoodUntil = performance.now() + 380;
+      state.shake = 16;
+      comicText("UNCLEAN!", ooze.x, ooze.y, "bad");
+      updateHud();
+      if (state.impurity >= 100) loseGame();
+    }
+
+    function advanceWave() {
+      state.wave += 1;
+      state.spawned = 0;
+      state.cleaned = 0;
+      state.bossSpawned = false;
+      state.totalThisWave = state.wave === 4 ? 1 : 8 + state.wave * 4;
+      state.spawnDelay = Math.max(520, 1350 - state.wave * 180);
+      state.purify = Math.min(100, state.purify + 22);
+      comicText(state.wave === 4 ? "THE UNCLEAN CUSHION APPROACHES!" : `WAVE ${state.wave}!`, viewSize().w / 2, 90, "good");
+      updateHud();
+    }
+
+    function winGame() {
+      state.mode = "won";
+      showOverlay("The Land Remains Clean!", "Little Boxie has cleansed the Oozing Affliction and kept the Covenant Kingdom spotless enough for brochure photography.", "Play Again");
+    }
+
+    function loseGame() {
+      state.mode = "lost";
+      showOverlay("Ceremonial Review Required", "The Affliction spread. The priests are not angry, merely disappointed and holding clipboards.", "Try Again");
+    }
+
+    function showOverlay(title, body, buttonText) {
+      overlay.style.display = "grid";
+      overlay.innerHTML = `
+        <div class="panel">
+          <h2>${title}</h2>
+          <p>${body}</p>
+          <p>Final score: ${state.score}</p>
+          <div class="button-row">
+            <button id="againBtn">${buttonText}</button>
+            <button class="secondary" id="howBtn2">How to Play</button>
+          </div>
+        </div>
+      `;
+      document.querySelector("#againBtn").addEventListener("click", resetGame);
+      document.querySelector("#howBtn2").addEventListener("click", showHow);
+    }
+
+    function showHow() {
+      overlay.style.display = "grid";
+      overlay.innerHTML = `
+        <div class="panel">
+          <h2>How to Cleanse</h2>
+          <p>Tap or click ooze before it reaches Boxie. Medium ooze takes two taps. Fast ooze is rude. The final boss takes sustained purification.</p>
+          <p>Build Purify to 100%, then use Covenant Cleanse to clear ordinary ooze from the screen.</p>
+          <p>If Impurity reaches 100%, the land requires ceremonial review.</p>
+          <div class="button-row">
+            <button id="startBtn2">Begin Cleansing</button>
+            <button class="secondary" id="backTitleBtn">Back</button>
+          </div>
+        </div>
+      `;
+      document.querySelector("#startBtn2").addEventListener("click", resetGame);
+      document.querySelector("#backTitleBtn").addEventListener("click", showTitle);
+    }
+
+    function showTitle() {
+      overlay.style.display = "grid";
+      overlay.innerHTML = `
+        <div class="panel">
+          <h2>Welcome to Leviticusland!</h2>
+          <p>Little Boxie, the cleanest hero in all the land, must repel flying ooze before impurity spreads.</p>
+          <p>Tap or click ooze blobs to cleanse them. Build purification power. Use the big blast when the Affliction gets pushy.</p>
+          <div class="button-row">
+            <button id="startBtn3">Begin Cleansing</button>
+            <button class="secondary" id="howBtn3">How to Play</button>
+          </div>
+        </div>
+      `;
+      document.querySelector("#startBtn3").addEventListener("click", resetGame);
+      document.querySelector("#howBtn3").addEventListener("click", showHow);
+    }
+
+    function covenantCleanse() {
+      if (state.purify < 100 || state.mode !== "playing") return;
+      const removed = state.oozes.filter(ooze => ooze.type !== "boss").length;
+      state.oozes = state.oozes.filter(ooze => ooze.type === "boss");
+      state.score += removed * 120;
+      state.purify = 0;
+      state.shake = 20;
+      addEffect("purifyBurst", viewSize().w / 2, viewSize().h / 2, Math.min(viewSize().w, viewSize().h) * 0.8);
+      comicText("COVENANT CLEANSE!", viewSize().w / 2, viewSize().h / 2, "good");
+      updateHud();
+    }
+
+    function handlePointer(event) {
+      if (state.mode !== "playing" || state.paused) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      let hit = null;
+      for (let i = state.oozes.length - 1; i >= 0; i--) {
+        const ooze = state.oozes[i];
+        const dx = x - ooze.x;
+        const dy = y - ooze.y;
+        if (Math.hypot(dx, dy) <= ooze.radius * 1.18) {
+          hit = ooze;
+          break;
+        }
+      }
+      if (hit) cleanseOoze(hit, x, y);
+      else {
+        state.combo = 0;
+        comicText("MISS!", x, y, "bad");
+      }
+    }
+
+    canvas.addEventListener("pointerdown", handlePointer);
+    blastBtn.addEventListener("click", covenantCleanse);
+    pauseBtn.addEventListener("click", () => {
+      if (state.mode !== "playing") return;
+      state.paused = !state.paused;
+      updateHud();
+    });
+
+    function drawSprite(name, x, y, w, h, alpha = 1, rotation = 0) {
+      const s = sprites[name];
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.drawImage(sheet, s[0], s[1], s[2], s[3], -w / 2, -h / 2, w, h);
+      ctx.restore();
+    }
+
+    function drawBackground(t) {
+      const { w, h } = viewSize();
+      ctx.save();
+      ctx.fillStyle = "#1f6c83";
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = "#f2d58b";
+      for (let y = -20; y < h; y += 16) {
+        for (let x = -20; x < w; x += 16) {
+          ctx.beginPath();
+          ctx.arc(x + ((y / 16) % 2) * 8, y, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 0.25;
+      ctx.strokeStyle = "#15110e";
+      ctx.lineWidth = 4;
+      for (let i = 0; i < 18; i++) {
+        const a = (i / 18) * Math.PI * 2 + t * 0.00008;
+        ctx.beginPath();
+        ctx.moveTo(w / 2, h * 0.72);
+        ctx.lineTo(w / 2 + Math.cos(a) * w, h * 0.72 + Math.sin(a) * h);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawBoxie(t) {
+      const pos = boxiePos();
+      let sprite = "boxieIdle";
+      if (state.boxieMood === "clean" && t < state.boxieMoodUntil) sprite = "boxieClean";
+      else if (state.boxieMood === "hit" && t < state.boxieMoodUntil) sprite = "boxieHit";
+      else state.boxieMood = "idle";
+      const size = pos.r * 3.25;
+      drawSprite(sprite, pos.x, pos.y, size, size * 0.75);
+    }
+
+    function updateGame(dt, t) {
+      if (state.mode !== "playing" || state.paused) return;
+      if (state.spawned < state.totalThisWave && t - state.lastSpawn > state.spawnDelay) {
+        spawnOoze();
+        state.lastSpawn = t;
+      }
+      const boxie = boxiePos();
+      state.oozes.forEach(ooze => {
+        const dx = boxie.x - ooze.x;
+        const dy = boxie.y - ooze.y;
+        const dist = Math.max(1, Math.hypot(dx, dy));
+        const wobble = Math.sin(t * 0.004 + ooze.wobble) * 0.35;
+        ooze.x += (dx / dist) * ooze.speed * dt + Math.cos(ooze.wobble) * wobble;
+        ooze.y += (dy / dist) * ooze.speed * dt + Math.sin(ooze.wobble) * wobble;
+        if (dist < boxie.r + ooze.radius * 0.52) oozeHitBoxie(ooze);
+      });
+      state.effects.forEach(effect => effect.life -= dt * 1000);
+      state.effects = state.effects.filter(effect => effect.life > 0);
+      state.texts.forEach(text => {
+        text.life -= dt * 1000;
+        text.y += text.vy * dt;
+      });
+      state.texts = state.texts.filter(text => text.life > 0);
+      state.shake = Math.max(0, state.shake - dt * 40);
+      if (state.spawned >= state.totalThisWave && state.oozes.length === 0 && state.mode === "playing") {
+        if (state.wave < 4) advanceWave();
+      }
+    }
+
+    function drawGame(t) {
+      const { w, h } = viewSize();
+      ctx.clearRect(0, 0, w, h);
+      ctx.save();
+      if (state.shake > 0) {
+        ctx.translate((Math.random() - 0.5) * state.shake, (Math.random() - 0.5) * state.shake);
+      }
+      drawBackground(t);
+      state.oozes.forEach(ooze => {
+        const scale = ooze.radius * 2.45;
+        drawSprite(ooze.sprite, ooze.x, ooze.y, scale, scale * 0.72, 1, Math.sin(t * 0.003 + ooze.wobble) * 0.05);
+        if (ooze.maxHp > 1) {
+          ctx.fillStyle = "#15110e";
+          ctx.fillRect(ooze.x - ooze.radius, ooze.y - ooze.radius - 14, ooze.radius * 2, 7);
+          ctx.fillStyle = "#8ba12c";
+          ctx.fillRect(ooze.x - ooze.radius, ooze.y - ooze.radius - 14, ooze.radius * 2 * (ooze.hp / ooze.maxHp), 7);
+        }
+      });
+      drawBoxie(t);
+      state.effects.forEach(effect => {
+        const alpha = Math.max(0, effect.life / effect.maxLife);
+        const size = effect.size * (1.15 - alpha * 0.25);
+        drawSprite(effect.sprite, effect.x, effect.y, size, size * 0.72, alpha);
+      });
+      state.texts.forEach(text => drawComicText(text));
+      if (state.paused) {
+        ctx.fillStyle = "rgba(0,0,0,0.45)";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = "#f2c43d";
+        ctx.strokeStyle = "#15110e";
+        ctx.lineWidth = 6;
+        ctx.font = "700 54px Impact, sans-serif";
+        ctx.textAlign = "center";
+        ctx.strokeText("PAUSED", w / 2, h / 2);
+        ctx.fillText("PAUSED", w / 2, h / 2);
+      }
+      ctx.restore();
+    }
+
+    function drawComicText(item) {
+      const alpha = Math.max(0, item.life / item.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.font = "900 26px Impact, sans-serif";
+      ctx.textAlign = "center";
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "#15110e";
+      ctx.fillStyle = item.tone === "bad" ? "#d64a39" : "#f2c43d";
+      ctx.strokeText(item.text, item.x, item.y);
+      ctx.fillText(item.text, item.x, item.y);
+      ctx.restore();
+    }
+
+    function loop(t) {
+      const dt = Math.min(0.04, (t - state.lastTime) / 1000 || 0);
+      state.lastTime = t;
+      updateGame(dt, t);
+      drawGame(t);
+      requestAnimationFrame(loop);
+    }
+
+    document.querySelector("#startBtn").addEventListener("click", resetGame);
+    document.querySelector("#howBtn").addEventListener("click", showHow);
+
+    sheet.onload = () => {
+      resizeCanvas();
+      requestAnimationFrame(loop);
+    };
+    updateHud();
+  </script>
+</body>
+</html>
